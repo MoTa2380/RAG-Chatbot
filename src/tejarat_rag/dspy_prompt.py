@@ -32,7 +32,7 @@ class RAG(dspy.Module):
 
 
 class RAGHandler:
-    def __init__(self):
+    def __init__(self, is_local_llm: bool = False):
         """
         Initializes the RAG pipeline, including the embedder, retriever, and language model.
         """
@@ -43,14 +43,28 @@ class RAGHandler:
             collection_name=CONFIGS.get("QDRANT_COLLECTION_NAME"),
         )
 
-        self.lm = dspy.LM(
-            model="openai/gpt-4o-mini",
-            api_key=CONFIGS.get("OPENAI_API_KEY"),
-            openai_config={"proxies": PROXIES},
-        )
-        dspy.settings.configure(lm=self.lm)
-
+        self.is_local_llm = is_local_llm
+        
+        self._setup_lm()
         self.rag = RAG(retriever=self.retriever)
+
+    def _setup_lm(self):
+        """
+        Configures the language model (local or OpenAI-based) and applies the settings globally.
+        """
+        model_name = CONFIGS.get("LOCAL_MODEL_NAME") if self.is_local_llm else CONFIGS.get("OPENAI_MODEL_NAME")
+        api_key = CONFIGS.get("LOCAL_LLM_API_KEY") if self.is_local_llm else CONFIGS.get("OPENAI_API_KEY")
+        api_base = CONFIGS.get("LOCAL_LLM_API") if self.is_local_llm else None
+        openai_config = {"proxies": PROXIES} if not self.is_local_llm else None
+
+        self.lm = dspy.LM(
+            model=model_name,
+            api_key=api_key,
+            api_base=api_base,
+            openai_config=openai_config,
+        )
+
+        dspy.settings.configure(lm=self.lm)
 
     def query(self, question: str) -> str:
         """
@@ -65,25 +79,6 @@ class RAGHandler:
         return self.rag(question=question)
 
 
-# embedder = SentenceEmbedder(api_url=CONFIGS.get("SENTENCE_EMBEDDER_E5"))
-# retriever = RAGRetriever(
-#     embedder=embedder,
-#     qdrant_url=CONFIGS.get("QDRTANT_URL"),
-#     collection_name=CONFIGS.get("QDRANT_COLLECTION_NAME"),
-# )
 
-
-# lm = dspy.LM(
-#     model="openai/gpt-4o-mini",
-#     api_key=CONFIGS.get("OPENAI_API_KEY"),
-#     openai_config={"proxies": PROXIES},
-# )
-# dspy.settings.configure(lm=lm)
-
-
-# rag = RAG(retriever=retriever)
-# query = "یکم درمورد بانک تجارت توضیح میدی"
-
-
-# output = rag(question=query)
-# print(output)
+## TODO: Implement Optimizer for Prompt and Fewshot
+## TODO: Get or Create train and validation set

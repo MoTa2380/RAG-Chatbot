@@ -94,23 +94,3 @@ class RAGRetriever:
             context += f"question: {payload.get('question', 'N/A')}\nanswer: {payload.get('answer', 'N/A')}\n\n"
         
         return context.strip()
-    
-    
-
-# # Usage example
-# if __name__ == "__main__":
-
-    
-#     embedder = SentenceEmbedder(api_url=configs.get("SENTENCE_EMBEDDER_E5"))
-#     retriever = RAGRetriever(
-#         embedder=embedder,
-#         qdrant_url="http://localhost:6333",
-#         collection_name=configs.get("QDRANT_COLLECTION_NAME")
-#     )
-    
-#     query = "ابلاغیه ارجاع کار رو میشه توضیح بدی؟"
-#     try:
-#         results = retriever.retrieve_context(query)
-#         print(results)
-#     except ValueError as e:
-#         print(f"Error: {e}")
