@@ -31,11 +31,6 @@ class RAG(dspy.Module):
         return self.response(context=context, question=question)
 
 
-
-
-
-
-
 class RAGHandler:
     def __init__(self):
         """

@@ -1,52 +1,22 @@
 import dspy
-import mlflow
-import os
 from .utils import ConfigLoader
+from .dspy_prompt import RAGHandler
+
+CONFIGS = ConfigLoader()
 
 
-configs = ConfigLoader()
+if __name__ == "__main__":
 
-# Set Proxy
-# os.environ["HTTPS_PROXY"] = configs.get("OPENAI_PROXY")
+    rag_pipeline = RAGHandler()
 
-
-
-# Mlflow Tracking
-mlflow.set_tracking_uri("http://localhost:5000")
-mlflow.set_experiment("DSPy")
-mlflow.dspy.autolog()
-
-
-# class GenerateAnswer(dspy.Signature):
-    
-
-# class RAG(dspy.Module):
-#     def __init__(self):
-#         self.respond = dspy.ChainOfThought('context, question -> response')
-
-#     def forward(self, question):
-#         context = search(question).passages
-#         return self.respond(context=context, question=question)
+    rag_pipeline.lm = dspy.LM(
+        model=CONFIGS.get("MODEL_NAME"),
+        api_key="Mohammad",
+        api_base=CONFIGS.get("LOCAL_LLM_API"),
+    )
+    dspy.settings.configure(lm=rag_pipeline.lm)
 
 
-lm = dspy.LM(model="openai/gita", api_key="Mohammad", api_base="https://llm-wrapper.dv.mci.dev/")
-dspy.settings.configure(lm=lm)
-
-
-# Define a Chain of Thought module
-class CoT(dspy.Module):
-    def __init__(self):
-        super().__init__()
-        self.prog = dspy.Predict("question -> answer")
-
-    def forward(self, question):
-        return self.prog(question=question)
-
-
-dspy_model = CoT()
-
-
-
-output = dspy_model("تو کی هستی؟")
-print(output)
-
+    user_query = "یکم درمورد بانک تجارت توضیح میدی"
+    answer = rag_pipeline.query(question=user_query)
+    print(answer)
